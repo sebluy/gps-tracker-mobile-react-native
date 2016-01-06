@@ -1,0 +1,3 @@
+rootProject.name = 'ReNatalSchejuler'
+
+include ':app'
