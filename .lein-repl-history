@@ -1,2 +1,3 @@
 (figwheel-android)
 :cljs/quit
+(figwheel-android)
