@@ -6,8 +6,10 @@
 
 (def app-registry js.React.AppRegistry)
 
-(defn alert [title]
-  (.alert (.-Alert js.React) title))
+(defn alert
+  ([title] (alert title nil))
+  ([title msg]
+   (.alert (.-Alert js.React) title msg)))
 
 (defn component-constructor [type]
   (fn [props & children]
@@ -18,9 +20,6 @@
 (def View (component-constructor js.React.View))
 (def ListView (component-constructor js.React.ListView))
 (def ProgressBar (component-constructor js.React.ProgressBar))
-
-(defn paths->list [waypoint-paths]
-  (map (fn [path] (-> path :id date->string)) waypoint-paths))
 
 (defonce state (atom {}))
 
@@ -49,6 +48,23 @@
             #js {:rowHasChanged (fn [r1 r2] (not= r1 r2))})]
     (.cloneWithRows ds (clj->js vals))))
 
+(defn waypoint-path-row [id]
+  (TouchableHighlight {:onPress #(show-waypoint-path id)
+                       :style {:padding 5
+                               :marginBottom 15
+                               :backgroundColor "#C0C0C0"
+                               :borderRadius 5}}
+                      (Text {:style {:textAlign "center"}} (date->string id))))
+
+(defn show-waypoint-path [id]
+  (alert (date->string id)
+         (str "Count: "
+              (->> (@state :waypoint-paths)
+                   (filter #(= id (% :id)))
+                   first
+                   :points
+                   count))))
+
 (defn view [state]
   (View {:style {:margin 40}}
         (TouchableHighlight {:onPress #(get-waypoint-paths)
@@ -58,12 +74,14 @@
                             (Text {:style {:textAlign "center"}} "Refresh"))
         (if (and (not= (state :waypoint-paths) :pending) (seq (state :waypoint-paths)))
           (ListView {:style {:marginTop 40}
-                     :dataSource (simple-datasource (paths->list (state :waypoint-paths)))
-                     :renderRow (fn [rowData] (Text {:style {:textAlign "center"}} rowData))})
+                     :dataSource (simple-datasource (map :id (state :waypoint-paths)))
+                     :renderRow waypoint-path-row})
           (if (= (state :waypoint-paths) :pending)
             (ProgressBar {:style {:marginTop 40}
                           :styleAttr "Inverse"})
-            (Text {:style {:marginTop 40}} "No Waypoints")))))
+            (Text {:style {:marginTop 40
+                           :textAlign "center"}}
+                  "No Waypoints")))))
 
 (defn zero-pad [s]
   (if (= (count s) 1)
@@ -85,7 +103,7 @@
 (defn render [state]
   (js.React.render (view state) 1))
 
-#_(render @state)
+(render @state)
 
 (defn ^:export init []
   (.registerRunnable app-registry "ReNatalSchejuler" render))
