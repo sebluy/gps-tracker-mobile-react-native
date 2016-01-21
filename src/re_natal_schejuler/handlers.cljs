@@ -5,6 +5,39 @@
             [re-natal-schejuler.util :as util]
             [cljs.reader :as reader]))
 
+;;;; history
+(defn create-history [state]
+  (assoc state :history '()))
+
+(defn push-history [state page]
+  (update state :history conj page))
+
+(defn pop-history [state]
+  (update state :history pop))
+
+;;;; pages and navigation
+(defn set-page [state page]
+  (assoc state :page page))
+
+(defn navigate [state page]
+  (-> state
+      (push-history (state :page))
+      (set-page page)))
+
+(defn back [state]
+  (let [last-page (first (state :history))]
+    (when (nil? last-page)
+      (js.React.BackAndroid.exitApp))
+    (cond-> state
+      last-page (-> (set-page last-page)
+                    (pop-history)))))
+
+(defn initialize [state]
+  (-> state
+      (set-page {:id :waypoint-path-list})
+      (create-history)))
+
+;; network waypoint paths
 (defn get-waypoint-paths-failure [state reason]
   (react/alert "Oops" (str reason))
   (dissoc state :waypoint-paths))
@@ -25,13 +58,7 @@
                 (state/handle get-waypoint-paths-failure reason))))
   (assoc state :waypoint-paths :pending))
 
-(defn get-path [state id]
-  (->> (state :waypoint-paths)
-       (filter #(= id (% :id)))
-       first))
 
+;; display waypoint path
 (defn show-waypoint-path [state id]
-  (react/alert (util/date->string id)
-         (-> (path/waypoint-attributes (get-path state id))
-             (util/attributes->str)))
-  state)
+  (navigate state {:id :show-waypoint-path :path-id id}))
