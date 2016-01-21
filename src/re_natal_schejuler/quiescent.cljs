@@ -10,27 +10,23 @@
   (let [basic (fn [impl]
                 (react-method []
                   (apply impl
-                    (.getDOMNode *component*)
                     (.-value (.-props *component*))
                     (.-constants (.-props *component*)))))
         with-old-value (fn [impl]
                          (react-method [prev-props _]
                            (apply impl
-                             (.getDOMNode *component*)
                              (.-value (.-props *component*))
                              (.-value prev-props)
                              (.-constants (.-props *component*)))))
         with-nil-old-value (fn [impl]
                              (react-method []
                                (apply impl
-                                 (.getDOMNode *component*)
                                  (.-value (.-props *component*))
                                  nil
                                  (.-constants (.-props *component*)))))
         with-callback (fn [impl]
                         (react-method [cb]
                           (apply impl
-                            (.getDOMNode *component*)
                             cb
                             (.-value (.-props *component*))
                             (.-constants (.-props *component*)))))]

@@ -6,7 +6,6 @@ react-native run-android (i think this is only necessary on java changes)
 react-native start
 
 Todo:
-Fix repl (try removing quiescent, exclusions)
-Use quiescent
-Load waypoint paths on render
-Add waypoint page path
+Fork quiescent into its own project (for react native)
+Add waypoint path page
+Remove iOs stuff (for now)

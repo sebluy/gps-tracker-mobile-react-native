@@ -4,6 +4,7 @@
 
 (set! js.React (js.require "react-native/Libraries/react-native/react-native.js"))
 (set! js.React.ProgressBar (js.require "ProgressBarAndroid"))
+(set! js.React.Toolbar (js.require "ToolbarAndroid"))
 
 (def app-registry js.React.AppRegistry)
 
@@ -13,10 +14,12 @@
    (.alert (.-Alert js.React) title msg)))
 
 (def text (q/constructor js.React.Text))
+(def image (q/constructor js.React.Image))
 (def touchable-highlight (q/constructor js.React.TouchableHighlight))
 (def view (q/constructor js.React.View))
 (def list-view (q/constructor js.React.ListView))
 (def progress-bar (q/constructor js.React.ProgressBar))
+(def toolbar (q/constructor js.React.Toolbar))
 
 (defonce state (atom {}))
 
@@ -38,7 +41,7 @@
                (swap! state assoc :waypoint-paths (first (reader/read-string body)))))
       (.catch (fn [reason]
                 (swap! state dissoc :waypoint-paths)
-                (alert (str "Oops" reason))))))
+                (alert "Oops" (str reason))))))
 
 (defn simple-datasource [vals]
   (let [ds (js.React.ListView.DataSource.
@@ -84,29 +87,38 @@
   (text {} msg))
 
 (q/defcomponent View
+  :on-mount #(get-waypoint-paths)
   [state]
-  (view {:style {:margin 40}}
-        (touchable-highlight {:onPress #(get-waypoint-paths)
-                             :style {:padding 10
-                                     :backgroundColor "#C0C0C0"
-                                     :borderRadius 5}}
-                            (text {:style {:textAlign "center"}} "Refresh"))
-        (if (and (not= (state :waypoint-paths) :pending) (seq (state :waypoint-paths)))
-          (list-view {:style {:marginTop 40}
-                     :dataSource (simple-datasource (map :id (state :waypoint-paths)))
-                     :renderRow waypoint-path-row})
-          (if (= (state :waypoint-paths) :pending)
-            (progress-bar {:style {:marginTop 40}
-                          :styleAttr "Inverse"})
-            (text {:style {:marginTop 40
-                           :textAlign "center"}}
-                  "No Waypoints")))))
+  (view {}
+        (toolbar {:title "GPSTracker"
+                  :style {:height 56
+                          :backgroundColor "#C0C0C0"}})
+        (view {:style {:margin 40}}
+              (text {:style {:textAlign "center"
+                             :fontSize 18}}
+                    "Waypoint Paths")
+              (touchable-highlight {:onPress #(get-waypoint-paths)
+                                    :style {:padding 10
+                                            :marginTop 15
+                                            :marginHorizontal 40
+                                            :backgroundColor "#C0C0C0"
+                                            :borderRadius 5}}
+                                   (text {:style {:textAlign "center"}} "Refresh"))
+              (if (and (not= (state :waypoint-paths) :pending) (seq (state :waypoint-paths)))
+                (list-view {:style {:marginTop 15}
+                            :dataSource (simple-datasource (map :id (state :waypoint-paths)))
+                            :renderRow waypoint-path-row})
+                (if (= (state :waypoint-paths) :pending)
+                  (progress-bar {:style {:marginTop 40}
+                                 :styleAttr "Inverse"})
+                  (text {:style {:marginTop 40
+                                 :textAlign "center"}}
+                        "No Waypoints"))))))
 
 (defn render [state]
   (js.React.render (View state) 1))
 
-;(-> @state)
-;(render @state)
+#_(render @state)
 
 (defn mount-root []
   (render @state))
