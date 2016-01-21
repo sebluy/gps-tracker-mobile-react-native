@@ -6,8 +6,10 @@ react-native run-android (i think this is only necessary on java changes)
 react-native start
 
 Todo:
-Rename to GPSTracker
 Migrate "framework" (db, handlers)
-Fork quiescent into its own project (for react native)
 Add waypoint path page
+
+Rename to GPSTracker
+"Fix" re-natal
 Remove iOs stuff (for now)
+Fork quiescent into its own project (for react native)
