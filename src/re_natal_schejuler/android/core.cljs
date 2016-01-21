@@ -1,6 +1,7 @@
 (ns ^:figwheel-no-load re-natal-schejuler.android.core
   (:require [cljs.reader :as reader]
-            [re-natal-schejuler.quiescent :as q]))
+            [re-natal-schejuler.quiescent :as q]
+            [re-natal-schejuler.path :as path]))
 
 (set! js.React (js.require "react-native/Libraries/react-native/react-native.js"))
 (set! js.React.ProgressBar (js.require "ProgressBarAndroid"))
@@ -20,6 +21,7 @@
 (def list-view (q/constructor js.React.ListView))
 (def progress-bar (q/constructor js.React.ProgressBar))
 (def toolbar (q/constructor js.React.Toolbar))
+(def scroll-view (q/constructor js.React.ScrollView))
 
 (defonce state (atom {}))
 
@@ -67,24 +69,29 @@
 
 (defn waypoint-path-row [id]
   (touchable-highlight {:onPress #(show-waypoint-path id)
-                       :style {:padding 5
-                               :marginBottom 15
-                               :backgroundColor "#C0C0C0"
-                               :borderRadius 5}}
-                      (text {:style {:textAlign "center"}} (date->string id))))
+                        :style {:padding 5
+                                :marginBottom 15
+                                :backgroundColor "#C0C0C0"
+                                :borderRadius 5}}
+                       (text {:style {:textAlign "center"}} (date->string id))))
+
+(defn get-path [id]
+  (->> (@state :waypoint-paths)
+       (filter #(= id (% :id)))
+       first))
+
+(defn key->title [key]
+  (-> key name clojure.string/capitalize))
+
+(defn attributes->str [attrs]
+  (clojure.string/join "\n" (map (fn [[key value]]
+                                   (str (key->title key) ": " value))
+                                 attrs)))
 
 (defn show-waypoint-path [id]
   (alert (date->string id)
-         (str "Count: "
-              (->> (@state :waypoint-paths)
-                   (filter #(= id (% :id)))
-                   first
-                   :points
-                   count))))
-
-(q/defcomponent Simple
-  [msg]
-  (text {} msg))
+         (-> (path/waypoint-attributes (get-path id))
+             (attributes->str))))
 
 (q/defcomponent View
   :on-mount #(get-waypoint-paths)
@@ -105,9 +112,10 @@
                                             :borderRadius 5}}
                                    (text {:style {:textAlign "center"}} "Refresh"))
               (if (and (not= (state :waypoint-paths) :pending) (seq (state :waypoint-paths)))
-                (list-view {:style {:marginTop 15}
-                            :dataSource (simple-datasource (map :id (state :waypoint-paths)))
-                            :renderRow waypoint-path-row})
+                (scroll-view {:style {:height 300
+                                      :marginTop 15}}
+                             (list-view {:dataSource (simple-datasource (map :id (state :waypoint-paths)))
+                                         :renderRow waypoint-path-row}))
                 (if (= (state :waypoint-paths) :pending)
                   (progress-bar {:style {:marginTop 40}
                                  :styleAttr "Inverse"})
@@ -118,7 +126,7 @@
 (defn render [state]
   (js.React.render (View state) 1))
 
-#_(render @state)
+(render @state)
 
 (defn mount-root []
   (render @state))
