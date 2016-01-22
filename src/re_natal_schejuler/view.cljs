@@ -81,9 +81,15 @@
          path-attrs (path/waypoint-attributes (get-path state id))]
     (r/view
      {:style styles.page}
-     (r/text {} (u/date->string id))
-     (r/text {} (str "Count: " (path-attrs :count)))
-     (r/text {} (str "Distance: " (path-attrs :distance))))))
+     (r/text
+      {:style [styles.text styles.marginVertical styles.bigText]}
+      (u/date->string id))
+     (r/text
+      {:style [styles.text styles.marginVertical]}
+      (str "Count: " (path-attrs :count)))
+     (r/text
+      {:style [styles.text styles.marginVertical]}
+      (str "Distance: " (path-attrs :distance))))))
 
 (q/defcomponent Page
   [state]
