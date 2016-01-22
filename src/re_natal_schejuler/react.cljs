@@ -2,6 +2,7 @@
   (:require [re-natal-schejuler.quiescent :as q]))
 
 (set! js.React (js.require "react-native/Libraries/react-native/react-native.js"))
+
 (set! js.React.ProgressBar (js.require "ProgressBarAndroid"))
 (set! js.React.Toolbar (js.require "ToolbarAndroid"))
 

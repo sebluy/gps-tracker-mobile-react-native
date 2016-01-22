@@ -1,5 +1,4 @@
 (ns re-natal-schejuler.quiescent
-  (:require [cljsjs.react])
   (:require-macros [re-natal-schejuler.quiescent :refer [react-method]]))
 
 (def ^:dynamic *component*

@@ -8,9 +8,6 @@ react-native start
 
 Todo:
 
-Remove iOs stuff (for now)
-Remove cljs nonsense
-"Fix" re-natal
 Rename to GPSTracker
 
 Try using Om Next

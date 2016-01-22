@@ -94,7 +94,7 @@ function importJs(src, success, error) {
 
 function loadApp(platform, devHost) {
     server = "http://"+ devHost + ":8081";
-    fileBasePath = config.basePath + platform;
+    fileBasePath = config.basePath;
 
     if (typeof goog === "undefined") {
         console.log('Loading Closure base.');
@@ -109,7 +109,7 @@ function loadApp(platform, devHost) {
                 var googreq = goog.require;
 
                 googreq('figwheel.connect');
-                googreq('env.' + platform + '.main');
+                googreq('env.main');
 
                 console.log('Done loading Clojure app');
             });
