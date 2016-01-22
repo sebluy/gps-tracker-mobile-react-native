@@ -1,4 +1,4 @@
-(ns re-natal-schejuler.state)
+(ns gps-tracker.state)
 
 (defonce state (atom {}))
 

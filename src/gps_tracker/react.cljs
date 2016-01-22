@@ -1,5 +1,5 @@
-(ns re-natal-schejuler.react
-  (:require [re-natal-schejuler.quiescent :as q]))
+(ns gps-tracker.react
+  (:require [gps-tracker.quiescent :as q]))
 
 (set! js.React (js.require "react-native/Libraries/react-native/react-native.js"))
 

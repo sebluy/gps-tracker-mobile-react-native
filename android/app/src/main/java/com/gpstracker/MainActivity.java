@@ -30,7 +30,7 @@ public class MainActivity extends Activity implements DefaultHardwareBackBtnHand
                 .setInitialLifecycleState(LifecycleState.RESUMED)
                 .build();
 
-        mReactRootView.startReactApplication(mReactInstanceManager, "ReNatalSchejuler", null);
+        mReactRootView.startReactApplication(mReactInstanceManager, "GPSTracker", null);
 
         setContentView(mReactRootView);
     }

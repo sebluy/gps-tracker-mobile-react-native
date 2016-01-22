@@ -1,10 +1,10 @@
-(ns re-natal-schejuler.view
-  (:require [re-natal-schejuler.state :as s]
-            [re-natal-schejuler.react :as r]
-            [re-natal-schejuler.path :as path]
-            [re-natal-schejuler.quiescent :as q]
-            [re-natal-schejuler.handlers :as h]
-            [re-natal-schejuler.util :as u]))
+(ns gps-tracker.view
+  (:require [gps-tracker.state :as s]
+            [gps-tracker.react :as r]
+            [gps-tracker.path :as path]
+            [gps-tracker.quiescent :as q]
+            [gps-tracker.handlers :as h]
+            [gps-tracker.util :as u]))
 
 (def GREY "#C0C0C0")
 

@@ -1,8 +1,8 @@
-(ns re-natal-schejuler.handlers
-  (:require [re-natal-schejuler.react :as react]
-            [re-natal-schejuler.state :as state]
-            [re-natal-schejuler.path :as path]
-            [re-natal-schejuler.util :as util]
+(ns gps-tracker.handlers
+  (:require [gps-tracker.react :as react]
+            [gps-tracker.state :as state]
+            [gps-tracker.path :as path]
+            [gps-tracker.util :as util]
             [cljs.reader :as reader]))
 
 ;;;; history

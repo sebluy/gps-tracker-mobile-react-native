@@ -1,4 +1,4 @@
-(ns re-natal-schejuler.quiescent)
+(ns gps-tracker.quiescent)
 
 (defmacro react-method
   "Internal helper macro to avoid code duplication.
@@ -6,7 +6,7 @@
   [args & body]
   `(fn ~args
      (cljs.core/this-as this#
-       (binding [re-natal-schejuler.quiescent/*component* this#]
+       (binding [gps-tracker.quiescent/*component* this#]
          ~@body))))
 
 (defn- extract-docstr
@@ -42,4 +42,4 @@
   (let [[docstr forms] (extract-docstr forms)
         [options forms] (extract-opts forms)
         [argvec & body] forms]
-    `(def ~name ~docstr (re-natal-schejuler.quiescent/component (fn ~argvec ~@body) ~options))))
+    `(def ~name ~docstr (gps-tracker.quiescent/component (fn ~argvec ~@body) ~options))))

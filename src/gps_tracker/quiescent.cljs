@@ -1,5 +1,5 @@
-(ns re-natal-schejuler.quiescent
-  (:require-macros [re-natal-schejuler.quiescent :refer [react-method]]))
+(ns gps-tracker.quiescent
+  (:require-macros [gps-tracker.quiescent :refer [react-method]]))
 
 (def ^:dynamic *component*
   "Within a component lifecycle function, is be bound to the underlying ReactJS instance." nil)

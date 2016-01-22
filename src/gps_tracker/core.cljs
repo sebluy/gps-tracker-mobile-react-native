@@ -1,8 +1,8 @@
-(ns re-natal-schejuler.core
-  (:require [re-natal-schejuler.react :as r]
-            [re-natal-schejuler.view :as v]
-            [re-natal-schejuler.state :as s]
-            [re-natal-schejuler.handlers :as h]))
+(ns gps-tracker.core
+  (:require [gps-tracker.react :as r]
+            [gps-tracker.view :as v]
+            [gps-tracker.state :as s]
+            [gps-tracker.handlers :as h]))
 
 (defn render [state]
   (js.React.render (v/Main state) 1))
@@ -28,4 +28,4 @@
   (add-watch s/state :render
              (fn [_ _ _ new-state]
                (render new-state)))
-  (.registerRunnable r/app-registry "ReNatalSchejuler" render))
+  (.registerRunnable r/app-registry "GPSTracker" render))

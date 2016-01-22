@@ -1,4 +1,4 @@
-(ns re-natal-schejuler.util
+(ns gps-tracker.util
   (:require [clojure.string :as s]))
 
 (defn zero-pad [s]

@@ -1,4 +1,4 @@
-(ns re-natal-schejuler.path
+(ns gps-tracker.path
   (:require [goog.string :as gstring]
             [goog.string.format]))
 
