@@ -1,4 +1,4 @@
-(ns re-natal-schejuler.android.core
+(ns re-natal-schejuler.core
   (:require [re-natal-schejuler.react :as r]
             [re-natal-schejuler.view :as v]
             [re-natal-schejuler.state :as s]
