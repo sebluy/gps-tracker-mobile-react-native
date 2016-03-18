@@ -1,32 +1,63 @@
 (ns gps-tracker.core
-  (:require [gps-tracker.react :as r]
-            [gps-tracker.view :as v]
-            [gps-tracker.state :as s]
-            [gps-tracker.handlers :as h]))
+  (:require [gps-tracker.react :as r]))
+
+(declare handle)
+(declare render)
+
+(defonce state (atom nil))
+(defonce debug (atom {:state '() :actions '()}))
+
+;(-> @state :tracking-paths)
+;(-> @debug :state #_(nth 0) :checkpoints)
+;(->> @debug :actions (take 2))
+;(swap! debug assoc :actions '())
+;(-> @debug)
+
+;(s/defschema Page {:id (s/eq :home)})
+
+;(s/defschema State {:page p/Page})
+
+;(def Action s/Any)
+;(s/defschema Action s/Any)
+
+;(js/Object.keys js.React.ToastAndroid)
+
+(defn toast [msg]
+  (js.React.ToastAndroid.show msg js.React.ToastAndroid.LONG))
+
+;(toast "hi")
+
+;(str (js->clj #js {:hi "you"}))
+
+;(Object.keys js.React.Geolocation)
+#_(js.React.Geolocation.getCurrentPosition
+ (fn [location] (-> location js->clj str toast))
+ (fn [error] (toast error))
+ #js {:timeout 5000})
+
+(defn init []
+  {:page {:id :home}})
+
+(defn handle [action state]
+  state)
+
+(defn view [address state]
+  (r/text nil "Hello, world!"))
+
+(defn address [action]
+  (swap! debug update :actions conj action)
+  (swap! state (partial handle action))
+  (swap! debug update :state conj @state)
+  (render @state))
 
 (defn render [state]
-  (js.React.render (v/Main state) 1))
+  (js.React.render (view address state) 1))
 
-(defn mount-root []
-  (render @s/state))
-
-;(mount-root)
-;(js.React.render (js.React.createElement js.React.Text nil "Cleared") 1)
-
-;(-> @s/state)
-;(s/handle h/navigate {:id :somewhere-else})
-
-;(-> js.React.BackAndroid)
-;(+ 1 1)
-
-(defn ^:export init []
-  (s/handle h/initialize)
+(defn ^:export init! []
+  (reset! state (init))
   (js.React.BackAndroid.addEventListener
    "hardwareBackPress"
    (fn []
-     (s/handle h/back)
+     (address '(:back))
      true))
-  (add-watch s/state :render
-             (fn [_ _ _ new-state]
-               (render new-state)))
-  (.registerRunnable r/app-registry "GPSTracker" render))
+  (.registerRunnable r/app-registry "GPSTracker" #(render @state)))

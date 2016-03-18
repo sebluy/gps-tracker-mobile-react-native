@@ -1,7 +1,6 @@
 Run
 ---------------------
 
-
 Change dev settings on phone to use IP:8081
 lein repl :headless
 cider-connect and then in cider repl (figwheel-android)
@@ -15,4 +14,4 @@ change ip in figwheel-bridge.js
 Todo
 --------------------
 
-Rename to GPSTracker
+Switch to use elm-like architecture

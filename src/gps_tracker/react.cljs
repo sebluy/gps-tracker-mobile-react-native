@@ -5,6 +5,7 @@
 
 (set! js.React.ProgressBar (js.require "ProgressBarAndroid"))
 (set! js.React.Toolbar (js.require "ToolbarAndroid"))
+(set! js.React.Geolocation (js.require "Geolocation"))
 
 (def app-registry js.React.AppRegistry)
 

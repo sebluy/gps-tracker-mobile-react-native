@@ -54,7 +54,7 @@ android {
     buildToolsVersion "23.0.1"
 
     defaultConfig {
-        applicationId "com.renatalschejuler"
+        applicationId "com.gpstracker"
         minSdkVersion 16
         targetSdkVersion 22
         versionCode 1
