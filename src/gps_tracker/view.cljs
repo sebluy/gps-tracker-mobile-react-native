@@ -60,7 +60,6 @@
          "No Waypoints")))
 
 (q/defcomponent WaypointPathsPage
-  :on-mount #(s/handle h/get-waypoint-paths)
   [state]
   (r/view
    {:style styles.page}

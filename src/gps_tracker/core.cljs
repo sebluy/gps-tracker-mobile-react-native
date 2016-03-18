@@ -17,6 +17,7 @@
 ;(s/handle h/navigate {:id :somewhere-else})
 
 ;(-> js.React.BackAndroid)
+;(+ 1 1)
 
 (defn ^:export init []
   (s/handle h/initialize)

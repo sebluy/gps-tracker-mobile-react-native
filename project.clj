@@ -7,6 +7,7 @@
                  [org.clojure/clojurescript "1.7.170"]
                  [prismatic/schema "1.0.4"]]
   :plugins [[lein-cljsbuild "1.1.1"]
+            [cider/cider-nrepl "0.11.0-SNAPSHOT"]
             [lein-figwheel "0.5.0-2"]]
   :clean-targets ["target/" "index.android.js"]
   :aliases {"prod-build" ^{:doc "Recompile code with prod profile."}
