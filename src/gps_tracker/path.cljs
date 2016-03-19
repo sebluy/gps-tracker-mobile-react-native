@@ -36,6 +36,14 @@
        (map distance-between)
        (reduce +)))
 
+(defn average [xs]
+  (/ (reduce + xs) (count xs)))
+
+(defn average-speed [{:keys [points]}]
+  (->> points
+       (map :speed)
+       (average)))
+
 (defn waypoint-attributes [path]
   {:distance (gstring/format "%.2fm" (total-distance path))
    :count (count (path :points))})

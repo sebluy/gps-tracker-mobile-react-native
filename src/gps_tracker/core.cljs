@@ -1,6 +1,9 @@
 (ns gps-tracker.core
   (:require [gps-tracker.react :as r]
-            [clojure.string :as s]
+            [gps-tracker.path :as p]
+            [clojure.string :as string]
+            [clojure.walk :as w]
+            [schema.core :as s]
             [gps-tracker.view :as v]))
 
 (declare handle)
@@ -16,14 +19,20 @@
 ;(swap! debug assoc :actions '())
 ;(-> @debug)
 
+(-> @state :path)
+
 ;(s/defschema Page {:id (s/eq :home)})
 
-;(s/defschema State {:page p/Page})
+(s/defschema State {:path s/Any ; tracking path
+                    :watch-id s/Int
+                    :tracking s/Bool
+                    :interval s/Int
+                    :now s/Any ; date
+                    :started s/Any ; date
+                    })
 
 ;(def Action s/Any)
 ;(s/defschema Action s/Any)
-
-;(js/Object.keys js.React.ToastAndroid)
 
 (defn toast [msg]
   (js.React.ToastAndroid.show msg js.React.ToastAndroid.SHORT))
@@ -39,18 +48,31 @@
   (js.React.Geolocation.clearWatch id))
 
 (defn start-tracking [state]
-  (let [interval (js/setInterval #(address `(:tick)) 200)]
+  (let [interval (js/setInterval #(address `(:tick)) 200)
+        now (js/Date.)
+        watch-id (watch-position)]
     (assoc state
+           :path {:id now :points []}
+           :watch-id watch-id
            :tracking true
            :interval interval
-           :now (js/Date.)
-           :started (js/Date.))))
+           :now now
+           :started now)))
 
-(defn stop-tracking [{:keys [interval] :as state}]
+(defn stop-tracking [{:keys [interval watch-id] :as state}]
+  (clear-watch watch-id)
   (js/clearInterval interval)
   (-> state
       (assoc :tracking false)
-      (dissoc :started :now)))
+      (dissoc :started :now :interval :watch-id)))
+
+(defn add-position [position state]
+  (let [coords (position "coords")
+        latitude (coords "latitude")
+        longitude (coords "longitude")
+        speed (coords "speed")]
+    (update-in state [:path :points]
+               conj {:latitude latitude :longitude longitude :speed speed})))
 
 (defn init []
   {:tracking false})
@@ -62,6 +84,9 @@
 
     :tick
     (assoc state :now (js/Date.))
+
+    :new-position
+    (add-position (last action) state)
 
     :stop
     (stop-tracking state)
@@ -95,21 +120,24 @@
   (let [s (mod (js/Math.floor (/ ms 1000)) 60)
         m (mod (js/Math.floor (/ ms 60000)) 60)
         h (mod (js/Math.floor (/ ms (* 60 60 1000))) 24)]
-    (s/join ":" (map (comp pad2-0 str) [h m s]))))
+    (string/join ":" (map (comp pad2-0 str) [h m s]))))
 
 (defn duration [t1 t2]
   (- (.getTime t2) (.getTime t1)))
 
-
-(defn tracking-view [{:keys [started now]}]
+(defn tracking-view [{:keys [started now path]}]
   (r/view
    nil
    (button "Stop Tracking" #(address '(:stop)))
-
    (r/view
     {:style [v/styles.timeBox
              v/styles.goldBorder]}
-    (r/text nil (duration-str (duration started now))))))
+    (r/text nil (str "Time Elapsed: " (duration-str (duration started now))))
+    (r/text nil (str "Total Distance: " (.toFixed (p/total-distance path) 2)))
+    (r/text nil (str "Count: " (count (path :points))))
+    (r/text nil (str "Average Speed: " (.toFixed (p/average-speed path) 2)))
+    (when (> (count (path :points)) 1)
+      (r/text nil (str "Current Speed: " (.toFixed ((last (path :points)) :speed) 2)))))))
 
 (defn view [address {:keys [tracking last-position] :as state}]
   (r/view
