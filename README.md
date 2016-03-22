@@ -15,3 +15,5 @@ Todo
 --------------------
 
 Switch to use elm-like architecture
+Add schema
+Use gps-tracker-common

@@ -18,6 +18,9 @@
 (def toolbar (q/constructor js.React.Toolbar))
 (def scroll-view (q/constructor js.React.ScrollView))
 
+(defn toast [msg]
+  (js.React.ToastAndroid.show msg js.React.ToastAndroid.SHORT))
+
 (defn alert
   ([title] (alert title nil))
   ([title msg]
