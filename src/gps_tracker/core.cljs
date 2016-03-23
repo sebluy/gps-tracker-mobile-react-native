@@ -45,21 +45,30 @@
 
 (s/defschema NotTracking (s/eq {:tracking? false}))
 
-(s/defschema State (either Tracking NotTracking))
+(s/defschema State (either Tracking NotTracking PendingFix Upload))
 
 (s/defschema Start (s/eq '(:start)))
 (s/defschema Stop (s/eq '(:stop)))
+
 (s/defschema NewPosition
   (sh/list (s/eq :new-position) (sh/singleton cs/TrackingPoint)))
+
 (s/defschema Tick (s/eq '(:tick)))
+
+(s/defschema UploadA (s/eq '(:upload)))
+(s/defschema UploadFailed (s/eq '(:upload-failed)))
+(s/defschema CleanupUpload (s/eq '(:cleanup-upload)))
 
 (s/defschema Action
   (either Start
           Stop
           NewPosition
-          Tick))
+          Tick
+          UploadA
+          UploadFailed
+          CleanupUpload))
 
-(defn coerce-position [js-pos]
+(s/defn coerce-position :- cs/TrackingPoint [js-pos]
   (let [{:strs [timestamp coords]} (js->clj js-pos)
         {:strs [latitude longitude speed]} coords]
     {:time (js/Date. timestamp)
@@ -84,15 +93,18 @@
            :fix? false
            :watch-id watch-id)))
 
+(defn now []
+  (js/Date.))
+
 (defn start-tracking [position state]
   (let [interval (js/setInterval #(address `(:tick)) 200)
-        now (js/Date.)]
+        time (now)]
     (assoc state
            :fix? true
            :path {:id now :points [position]}
            :interval interval
-           :now now
-           :started now)))
+           :now time
+           :started time)))
 
 (defn stop-tracking [{:keys [interval watch-id] :as state}]
   (clear-watch watch-id)
@@ -110,7 +122,7 @@
 (defn add-position [position state]
   (update-in state [:path :points] conj position))
 
-(defn init []
+(s/defn init :- State []
   {:tracking? false})
 
 (s/defn handle :- State [action :- Action state :- State]
@@ -119,7 +131,7 @@
     (request-fix state)
 
     :tick
-    (assoc state :now (js/Date.))
+    (assoc state :now (now))
 
     :new-position
     (if (state :fix?)

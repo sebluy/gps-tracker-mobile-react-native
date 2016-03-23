@@ -18,4 +18,4 @@ Switch to use elm-like architecture
 Add tests (mock side effects for now)
 Refactor state
 Cleanup view
-Filter gps updates (1/10 Hz)
+Filter gps updates (1/10 Hz) (core.async?)
