@@ -58,7 +58,6 @@
                 (state/handle get-waypoint-paths-failure reason))))
   (assoc state :waypoint-paths :pending))
 
-
 ;; display waypoint path
 (defn show-waypoint-path [state id]
   (navigate state {:id :show-waypoint-path :path-id id}))

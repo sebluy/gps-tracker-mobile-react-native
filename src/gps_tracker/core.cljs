@@ -1,5 +1,6 @@
 (ns gps-tracker.core
   (:require [gps-tracker.react :as r]
+            [gps-tracker.remote :as rem]
             [gps-tracker.path :as p]
             [gps-tracker.util :as u]
             [gps-tracker-common.schema-helpers :as sh]
@@ -18,26 +19,31 @@
 ;(->> @debug :actions (take 2))
 ;(swap! debug assoc :actions '())
 ;(-> @debug)
-;(s/defschema Page {:id (s/eq :home)})
+;(-> @state keys)
 
 (defn either [& schemas]
   (s/pred
    (fn [val]
      (some #(nil? (s/check % val)) schemas))))
 
-(s/defschema Tracking {:tracking (s/eq true)
-                       :fix (s/eq true)
+(s/defschema Tracking {:tracking? (s/eq true)
+                       :fix? (s/eq true)
                        :path cs/TrackingPath
                        :watch-id s/Int
                        :interval s/Int
                        :now cs/Date
                        :started cs/Date})
 
-(s/defschema PendingFix {:tracking (s/eq true)
-                         :fix (s/eq false)
+(s/defschema Upload {:tracking? (s/eq false)
+                     :path cs/TrackingPath
+                     :pending? s/Bool
+                     :failed? s/Bool})
+
+(s/defschema PendingFix {:tracking? (s/eq true)
+                         :fix? (s/eq false)
                          :watch-id s/Int})
 
-(s/defschema NotTracking (s/eq {:tracking false}))
+(s/defschema NotTracking (s/eq {:tracking? false}))
 
 (s/defschema State (either Tracking NotTracking))
 
@@ -74,15 +80,15 @@
 (defn request-fix [state]
   (let [watch-id (watch-position)]
     (assoc state
-           :tracking true
-           :fix false
+           :tracking? true
+           :fix? false
            :watch-id watch-id)))
 
 (defn start-tracking [position state]
   (let [interval (js/setInterval #(address `(:tick)) 200)
         now (js/Date.)]
     (assoc state
-           :fix true
+           :fix? true
            :path {:id now :points [position]}
            :interval interval
            :now now
@@ -93,15 +99,19 @@
   (when interval
     (js/clearInterval interval))
   (-> state
-      (assoc :tracking false)
-      (dissoc :started :now :interval :watch-id :fix)))
+      (assoc :tracking? false)
+      (dissoc :started :now :interval :watch-id :fix?)))
+
+(defn ask-to-upload [state]
+  (assoc state
+         :pending? false
+         :failed? false))
 
 (defn add-position [position state]
   (update-in state [:path :points] conj position))
 
 (defn init []
-  {:tracking false})
-
+  {:tracking? false})
 
 (s/defn handle :- State [action :- Action state :- State]
   (case (first action)
@@ -112,12 +122,33 @@
     (assoc state :now (js/Date.))
 
     :new-position
-    (if (state :fix)
+    (if (state :fix?)
       (add-position (last action) state)
       (start-tracking (last action) state))
 
+    :upload
+    (do
+      (rem/post {:action :add-path
+                 :path-type :tracking
+                 :path (state :path)}
+                #(address '(:cleanup-upload))
+                #(address '(:upload-failed)))
+      (assoc state :pending? true))
+
+    :upload-failed
+    (assoc state
+           :failed? true
+           :pending? false)
+
+    :cleanup-upload
+    (dissoc state :path :pending? :failed?)
+
     :stop
-    (stop-tracking state)
+    (if (state :path)
+      (-> state
+          (stop-tracking)
+          (ask-to-upload))
+      (stop-tracking state))
 
     state))
 
@@ -162,18 +193,47 @@
   (r/view
    nil
    (button "Stop Tracking" #(address '(:stop)))
-   (if (state :fix)
+   (if (state :fix?)
      (path-stats-view state)
      (pending-fix-view))))
 
-(defn view [address {:keys [tracking last-position] :as state}]
+(defn upload-view [state]
+  (r/view
+   nil
+   (r/text nil "Upload?")
+   (button "Yes" #(address '(:upload)))
+   (button "No" #(address '(:cleanup-upload)))))
+
+(defn retry-upload-view []
+  (r/view
+   nil
+   (r/text nil "Upload Failed. Retry?")
+   (button "Yes" #(address '(:upload)))
+   (button "No" #(address '(:cleanup-upload)))))
+
+(defn pending-upload-view []
+  (r/progress-bar nil))
+
+(defn view [address state]
   (r/view
    {:style [v/styles.purple
             v/styles.fullPage]}
    (r/view
     {:style [v/styles.page]}
-    (if tracking
+    (cond
+      (state :tracking?)
       (tracking-view state)
+
+      (state :pending?)
+      (pending-upload-view)
+
+      (state :failed?)
+      (retry-upload-view)
+
+      (state :path)
+      (upload-view state)
+
+      :else
       (button "Start Tracking" #(address '(:start)))))))
 
 (defn address [action]
@@ -187,7 +247,7 @@
 
 (defn ^:export init! []
   (reset! state (init))
-  (js.React.BackAndroid.addEventListener
+  #_(js.React.BackAndroid.addEventListener
    "hardwareBackPress"
    (fn []
      (address '(:back))
