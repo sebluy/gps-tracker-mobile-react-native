@@ -1,10 +1,11 @@
 (ns gps-tracker.tracking
-  (:require [gps-tracke.react :as r]
+  (:require [gps-tracker.react :as r]
             [gps-tracker.path :as p]
             [gps-tracker.util :as u]
             [gps-tracker-common.schema-helpers :as sh]
             [gps-tracker-common.schema :as cs]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [gps-tracker.styles :as st]))
 
 (s/defschema Tracking {:page (s/eq :tracking)
                        :fix? (s/eq true)
@@ -18,7 +19,7 @@
                          :fix? (s/eq false)
                          :watch-id s/Int})
 
-(s/defschema State (either Tracking PendingFix))
+(s/defschema State (u/either Tracking PendingFix))
 
 (s/defschema Start (s/eq '(:start)))
 
@@ -43,9 +44,9 @@
      :longitude longitude
      :speed speed}))
 
-(defn watch-position []
+(defn watch-position [address]
   (let [on-success (fn [position]
-                     (address `(:tracking :receive-position ~(coerce-position position))))
+                     (address `(:receive-position ~(coerce-position position))))
         on-error r/toast
         options #js {:enableHighAccuracy true}]
     (js.React.Geolocation.watchPosition on-success on-error options)))
@@ -53,13 +54,13 @@
 (defn clear-watch [id]
   (js.React.Geolocation.clearWatch id))
 
-(defn request-fix []
-  (let [watch-id (watch-position)]
+(defn request-fix [address]
+  (let [watch-id (watch-position address)]
     {:page :tracking
      :fix? false
      :watch-id watch-id}))
 
-(defn start-tracking [position state]
+(defn start-tracking [address position state]
   (let [interval (js/setInterval #(address `(:tick)) 200)
         time (u/now)]
     (assoc state
@@ -78,10 +79,10 @@
 (defn add-position [position state]
   (update-in state [:path :points] conj position))
 
-(s/defn handle :- State [action :- Action state :- State]
+(s/defn handle :- State [address action :- Action state :- State]
   (case (first action)
     :start
-    (request-fix)
+    (request-fix address)
 
     :tick
     (assoc state :now (u/now))
@@ -89,19 +90,19 @@
     :receive-position
     (if (state :fix?)
       (add-position (last action) state)
-      (start-tracking (last action) state))
+      (start-tracking address (last action) state))
 
     :stop
     (stop-tracking state)
 
-    state)
+    state))
 
 ;;;; VIEW
 
 (defn path-stats-view [{:keys [started now path]}]
   (r/view
-   {:style [v/styles.timeBox
-            v/styles.goldBorder]}
+   {:style [st/styles.timeBox
+            st/styles.goldBorder]}
    (r/text nil (str "Time Elapsed: " (u/duration-str (u/duration started now))))
    (r/text nil (str "Total Distance: " (.toFixed (p/total-distance path) 2)))
    (r/text nil (str "Count: " (count (path :points))))
@@ -112,12 +113,12 @@
 
 (defn pending-fix-view []
   (r/view
-   {:style [v/styles.timeBox
-            v/styles.goldBorder]}
+   {:style [st/styles.timeBox
+            st/styles.goldBorder]}
    (r/text nil (str "Pending Fix"))
    (r/progress-bar nil)))
 
-(defn tracking-view [state]
+(defn view [address state]
   (r/view
    nil
    (u/button "Stop Tracking" #(address '(:stop)))

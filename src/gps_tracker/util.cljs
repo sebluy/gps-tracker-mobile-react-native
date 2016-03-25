@@ -22,7 +22,7 @@
   (str (.toLocaleDateString date) " " (time-string date)))
 
 (defn key->title [key]
-  (-> key name st/capitalize))
+  (-> key name str/capitalize))
 
 (defn attributes->str [attrs]
   (str/join "\n" (map (fn [[key value]]

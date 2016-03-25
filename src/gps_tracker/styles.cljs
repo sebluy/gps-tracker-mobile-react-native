@@ -1,4 +1,5 @@
-(ns gps-tracker.styles)
+(ns gps-tracker.styles
+  (:require [gps-tracker.react]))
 
 (def GREY "#C0C0C0")
 

@@ -1,7 +1,7 @@
 (ns gps-tracker.remote
   (:require [cljs.reader :as reader]
             [gps-tracker.react :as r]
-            [gps-tracker.remote :as rem]
+            [gps-tracker.util :as u]
             [gps-tracker-common.schema-helpers :as sh]
             [gps-tracker-common.schema :as cs]
             [schema.core :as s]))
@@ -35,13 +35,13 @@
 (s/defschema Cleanup (s/eq '(:cleanup)))
 
 (s/defschema Action
-  (either AskToUpload
+  (u/either AskToUpload
           Send
           Failure
           Success
           Cleanup))
 
-(s/defn handle :- State [action :- Action state :- State]
+(s/defn handle :- State [address action :- Action state :- State]
   (case (first action)
 
     :ask-to-upload
@@ -53,8 +53,8 @@
       (post {:action :add-path
                  :path-type :tracking
                  :path (state :path)}
-                #(address '(:remote :success))
-                #(address '(:remote :failure)))
+                #(address '(:success))
+                #(address '(:failure)))
       (assoc state :pending? true))
 
     :failure
@@ -73,8 +73,8 @@
   (r/view
    nil
    (r/text nil (upload-message (state :failed?)))
-   (button "Yes" #(address '(:remote :send)))
-   (button "No" #(address '(:remote :cleanup)))))
+   (u/button "Yes" #(address '(:send)))
+   (u/button "No" #(address '(:cleanup)))))
 
 (defn pending-upload-view []
   (r/progress-bar nil))

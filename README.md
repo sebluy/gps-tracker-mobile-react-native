@@ -18,3 +18,6 @@ Refactor state
 Cleanup view
 Filter gps updates (1/10 Hz) (core.async?)
 Add tests (mock side effects for now) start testing side effects
+Have handlers return a list of effects instead of performing them
+Add bluetooth
+Add a "evaluating scripts" view to figwheel-bridge
