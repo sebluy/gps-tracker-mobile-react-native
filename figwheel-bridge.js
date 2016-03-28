@@ -15,9 +15,9 @@ var config = {
         render: function () {
             var plainStyle = {flex: 1, alignItems: 'center', justifyContent: 'center'};
             return (
-                <React.View style={plainStyle}>
+                    <React.View style={plainStyle}>
                     <React.Text>Waiting for Figwheel to load files.</React.Text>
-                </React.View>
+                    </React.View>
             );
         }
     })
@@ -28,10 +28,21 @@ var server = null; // will be set dynamically
 var fileBasePath = null; // will be set dynamically
 var evaluate = eval; // This is needed, direct calls to eval does not work (RN packager???)
 
+renderMessage = function (msg) {
+    elem = React.createElement(React.View, {}, React.createElement(React.Text, {}, msg));
+    React.render(elem, 1);
+};
+
+
+onError = function (error) {
+    renderMessage("Something went wrong: " + error);
+};
+
 // evaluates js code ensuring proper ordering
 function customEval(url, javascript, success, error) {
     if (scriptQueue.length > 0) {
         if (scriptQueue[0] === url) {
+            renderMessage("Script queue length: " + scriptQueue.length);
             try {
                 evaluate(javascript);
                 console.info('Evaluated: ' + url);
@@ -43,16 +54,16 @@ function customEval(url, javascript, success, error) {
             } catch (e) {
                 console.error('Evaluation error in: ' + url);
                 console.error(e);
-                error();
+                onError('Evaluation error in: ' + url);
             }
         } else {
             setTimeout(function () {
-                customEval(url, javascript, success, error)
+                customEval(url, javascript, success, error);
             }, 5);
         }
     } else {
         console.error('Something bad happened...');
-        error()
+        onError('Bad queue length');
     }
 }
 function asyncImportScripts(path, success, error) {
@@ -62,7 +73,7 @@ function asyncImportScripts(path, success, error) {
     scriptQueue.push(url);
     fetch(url)
         .then(function (response) {
-            return response.text()
+            return response.text();
         })
         .then(function (responseText) {
             return customEval(url, responseText, success, error);
@@ -70,7 +81,7 @@ function asyncImportScripts(path, success, error) {
         .catch(function (error) {
             console.error('Error loading script, please check your config setup.');
             console.error(error);
-            return error();
+            return error(error);
         });
 }
 
@@ -81,8 +92,7 @@ function importJs(src, success, error) {
         };
     }
     if (typeof error !== 'function') {
-        error = function () {
-        };
+        error = onError;
     }
 
     var filePath = fileBasePath + '/' + src;
@@ -95,6 +105,7 @@ function importJs(src, success, error) {
 function loadApp(platform, devHost) {
     server = "http://"+ devHost + ":8081";
     fileBasePath = config.basePath;
+//  renderMessage("Starting loading...");
 
     if (typeof goog === "undefined") {
         console.log('Loading Closure base.');
@@ -191,8 +202,8 @@ function shimJsLoader() {
         //    so that it can add callbacks to deferred
         setTimeout(function () {
             importJs(uri.getPath(),
-                deferred.callAllCallbacks,
-                deferred.callAllErrbacks);
+                     deferred.callAllCallbacks,
+                     deferred.callAllErrbacks);
         }, 1);
 
         return deferred;

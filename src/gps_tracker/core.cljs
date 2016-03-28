@@ -20,7 +20,8 @@
 ;(-> @debug)
 ;(-> @state keys)
 
-(sc/defschema State (u/either t/State rem/State))
+(sc/defschema Home {:page (sc/eq :home)})
+(sc/defschema State (u/either t/State rem/State Home))
 
 (sc/defschema Action
   (u/either (sh/list (sc/eq :remote) rem/Action)
@@ -29,7 +30,26 @@
 (sc/defn init :- State []
   {:page :home})
 
-(sc/defn handle :- State [action :- Action state :- State]
+(sc/defn before :- State [action :- Action state :- State]
+  (cond
+    (= action '(:tracking :start))
+    (assoc state :page :tracking)
+
+    :else
+    state))
+
+(sc/defn after :- State [action :- Action state :- State]
+  (cond
+    (= action '(:tracking :stop))
+    (rem/init (state :path))
+
+    (= action '(:remote :cleanup))
+    {:page :home}
+
+    :else
+    state))
+
+(sc/defn delegate :- State [action :- Action state :- State]
   (case (first action)
     :remote
     (rem/handle (a/forward address (a/tag :remote)) (rest action) state)
@@ -38,6 +58,12 @@
     (t/handle (a/forward address (a/tag :tracking)) (rest action) state)
 
     state))
+
+(sc/defn handle :- State [action :- Action state :- State]
+  (->> state
+       (before action)
+       (delegate action)
+       (after action)))
 
 (defn home [address]
   (u/button "Start Tracking" #(address `(:tracking :start))))
@@ -56,7 +82,6 @@
       (rem/view (a/forward address (a/tag :remote)) state)
 
       (home address)))))
-
 
 (defn address [action]
   (swap! debug update :actions conj action)

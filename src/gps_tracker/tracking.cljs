@@ -19,7 +19,10 @@
                          :fix? (s/eq false)
                          :watch-id s/Int})
 
-(s/defschema State (u/either Tracking PendingFix))
+(s/defschema Idle {:page (s/eq :tracking)
+                   (s/optional-key :path) cs/TrackingPath})
+
+(s/defschema State (u/either Tracking PendingFix Idle))
 
 (s/defschema Start (s/eq '(:start)))
 

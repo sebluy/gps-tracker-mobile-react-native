@@ -17,69 +17,73 @@
                (.catch (fn [reason]
                          (on-failure)))))))
 
-(s/defschema State {:page :remote
+(s/defschema State {:page (s/eq :remote)
                     :path cs/TrackingPath
-                    :pending? s/Bool
-                    :failed? s/Bool})
+                    :status (s/enum :fresh :pending :success :failure)})
+
 (defn init [path]
   {:page :remote
    :path path
-   :pending? false
-   :failed? false})
+   :status :fresh})
 
-(s/defschema AskToUpload
-  (sh/list '(:ask-to-upload) (sh/singleton cs/TrackingPath)))
 (s/defschema Send (s/eq '(:send)))
 (s/defschema Failure (s/eq '(:failure)))
 (s/defschema Success (s/eq '(:success)))
 (s/defschema Cleanup (s/eq '(:cleanup)))
 
 (s/defschema Action
-  (u/either AskToUpload
-          Send
-          Failure
-          Success
-          Cleanup))
+  (u/either Send
+            Failure
+            Success
+            Cleanup))
 
 (s/defn handle :- State [address action :- Action state :- State]
   (case (first action)
 
-    :ask-to-upload
-    (let [path (last action)]
-      (init path))
-
     :send
     (do
       (post {:action :add-path
-                 :path-type :tracking
-                 :path (state :path)}
-                #(address '(:success))
-                #(address '(:failure)))
-      (assoc state :pending? true))
+             :path-type :tracking
+             :path (state :path)}
+            #(address '(:success))
+            #(address '(:failure)))
+      (assoc state :status :pending))
 
     :failure
-    (assoc state
-           :failed? true
-           :pending? false)
+    (assoc state :status :failure)
+
+    :success
+    (assoc state :status :success)
 
     state))
 
-(defn upload-message [failed?]
-  (if failed?
-    ("Upload failed. Try Again?")
-    ("Upload?")))
+(defn upload-message [status]
+  (if (= status :failed)
+    "Upload failed. Try Again?"
+    "Upload?"))
 
 (defn upload-view [address state]
   (r/view
    nil
-   (r/text nil (upload-message (state :failed?)))
+   (r/text nil (upload-message (state :status)))
    (u/button "Yes" #(address '(:send)))
    (u/button "No" #(address '(:cleanup)))))
+
+(defn done-view [address]
+  (r/view
+   nil
+   (r/text nil "Success")
+   (u/button "Back" #(address '(:cleanup)))))
 
 (defn pending-upload-view []
   (r/progress-bar nil))
 
 (defn view [address state]
-  (if (state :pending?)
+  (case (state :status)
+    :pending
     (pending-upload-view)
+
+    :success
+    (done-view address)
+
     (upload-view address state)))

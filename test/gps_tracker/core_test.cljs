@@ -1,6 +1,8 @@
 (ns gps-tracker.core-test
   (:require [cljs.test :as t]
             [gps-tracker.core :as c]
+            [gps-tracker.util :as u]
+            [gps-tracker.tracking :as tr]
             [gps-tracker.remote :as r]
             [schema.test :as st]))
 
@@ -18,29 +20,28 @@
                   :coords #js {:latitude latitude
                                :longitude longitude
                                :speed speed}}]
-      (t/is (= (c/coerce-position js) clj)))))
+      (t/is (= (tr/coerce-position js) clj)))))
 
 (def actions
   (let [time (js/Date. "1/2/16 8:00 PM")
         position {:time time :latitude 1.2 :longitude 2.4 :speed 3.6}]
-   [`(:tracking :start)
+    [`(:tracking :start)
      `(:tracking :receive-position ~position)
      `(:tracking :tick)
      `(:tracking :receive-position ~position)
      `(:tracking :tick)
      `(:tracking :stop)
-     `(:remote :ask-to-upload)
      `(:remote :send)
      `(:remote :failure)
-     `(:remote :retry)
+     `(:remote :send)
      `(:remote :success)
      `(:remote :cleanup)]))
 
 (defn handle-with-redefs [action state]
   (let [time (js/Date. "1/2/16 8:00 PM")]
-    (with-redefs [c/watch-position (constantly 1)
-                  c/clear-watch (constantly nil)
-                  c/now (constantly time)
+    (with-redefs [tr/watch-position (constantly 1)
+                  tr/clear-watch (constantly nil)
+                  u/now (constantly time)
                   js/setInterval (constantly 1)
                   js/clearInterval (constantly nil)
                   r/post (constantly nil)]
@@ -65,6 +66,8 @@
   (let [state (c/init)]
     (c/render state)
     (js/setTimeout #(render-loop state actions delay) delay)))
+
+(run-with-render actions 1000)
 
 (t/use-fixtures :once st/validate-schemas)
 
