@@ -7,6 +7,8 @@
             [schema.core :as s]
             [gps-tracker.styles :as st]))
 
+;; STATE
+
 (s/defschema Tracking {:page (s/eq :tracking)
                        :fix? (s/eq true)
                        :path cs/TrackingPath
@@ -24,6 +26,8 @@
 
 (s/defschema State (u/either Tracking PendingFix Idle))
 
+;; ACTIONS
+
 (s/defschema Start (s/eq '(:start)))
 
 (s/defschema Stop (s/eq '(:stop)))
@@ -39,6 +43,8 @@
             ReceivePosition
             Tick))
 
+;; HANDLERS
+
 (s/defn coerce-position :- cs/TrackingPoint [js-pos]
   (let [{:strs [timestamp coords]} (js->clj js-pos)
         {:strs [latitude longitude speed]} coords]
@@ -47,9 +53,32 @@
      :longitude longitude
      :speed speed}))
 
+(defn filter-position-10s [f]
+  (let [last (atom nil)]
+    (fn [position]
+      (cond
+        (nil? @last)
+        (do (reset! last (position :time))
+            (f position))
+
+        (>= (u/duration @last (position :time)) (* 10 u/sec))
+        (do (reset! last (position :time))
+            (f position))
+
+        :else
+        nil))))
+
+(defn map-coerce-position [f]
+  (fn [position]
+    (f (coerce-position position))))
+
+(defn on-new-position [address]
+  (-> (fn [position] (address `(:receive-position ~position)))
+      (filter-position-10s)
+      (map-coerce-position)))
+
 (defn watch-position [address]
-  (let [on-success (fn [position]
-                     (address `(:receive-position ~(coerce-position position))))
+  (let [on-success (on-new-position address)
         on-error r/toast
         options #js {:enableHighAccuracy true}]
     (js.React.Geolocation.watchPosition on-success on-error options)))
@@ -64,7 +93,7 @@
      :watch-id watch-id}))
 
 (defn start-tracking [address position state]
-  (let [interval (js/setInterval #(address `(:tick)) 200)
+  (let [interval (js/setInterval #(address `(:tick)) 250)
         time (u/now)]
     (assoc state
            :fix? true
@@ -100,7 +129,7 @@
 
     state))
 
-;;;; VIEW
+;; VIEW
 
 (defn path-stats-view [{:keys [started now path]}]
   (r/view

@@ -34,10 +34,14 @@
     (str "0" n)
     (str n)))
 
+(def sec 1000)
+(def minute (* 60 sec))
+(def hour (* 60 minute))
+
 (defn duration-str [ms]
-  (let [s (mod (js/Math.floor (/ ms 1000)) 60)
-        m (mod (js/Math.floor (/ ms 60000)) 60)
-        h (mod (js/Math.floor (/ ms (* 60 60 1000))) 24)]
+  (let [s (mod (js/Math.floor (/ ms sec)) 60)
+        m (mod (js/Math.floor (/ ms minute)) 60)
+        h (mod (js/Math.floor (/ ms hour)) 24)]
     (str/join ":" (map time-field->string [h m s]))))
 
 (defn duration [t1 t2]
