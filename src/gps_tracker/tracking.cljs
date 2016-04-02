@@ -131,23 +131,23 @@
 
 ;; VIEW
 
+(defn stat-view [stat]
+  (r/text {:style st/stat} stat))
+
 (defn path-stats-view [{:keys [started now path]}]
   (r/view
-   {:style [st/styles.timeBox
-            st/styles.goldBorder]}
-   (r/text nil (str "Time Elapsed: " (u/duration-str (u/duration started now))))
-   (r/text nil (str "Total Distance: " (.toFixed (p/total-distance path) 2)))
-   (r/text nil (str "Count: " (count (path :points))))
-   (r/text nil (str "Average Speed: " (.toFixed (p/average-speed path) 2)))
-   (when (> (count (path :points)) 1)
-     (r/text nil (str "Current Speed: "
-                      (.toFixed ((last (path :points)) :speed) 2))))))
+   nil
+   (stat-view (str "Time Elapsed: " (u/duration-str (u/duration started now))))
+   (stat-view (str "Total Distance: " (str (.toFixed (u/miles (p/total-distance path)) 2) " miles")))
+   (stat-view (str "Count: " (count (path :points))))
+   (stat-view (str "Average Speed: " (str (.toFixed (u/mph (p/average-speed path)) 2) " mph")))
+   (stat-view
+    (str "Current Speed: " (str (.toFixed (u/mph ((last (path :points)) :speed)) 2) " mph")))))
 
 (defn pending-fix-view []
   (r/view
-   {:style [st/styles.timeBox
-            st/styles.goldBorder]}
-   (r/text nil (str "Pending Fix"))
+   nil
+   (r/text {:style st/title} (str "Pending Fix"))
    (r/progress-bar nil)))
 
 (defn view [address state]

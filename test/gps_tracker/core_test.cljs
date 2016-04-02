@@ -1,4 +1,4 @@
-(ns gps-tracker.core-test
+(ns ^:figwheel-no-load gps-tracker.core-test
   (:require [cljs.test :as t]
             [gps-tracker.core :as c]
             [gps-tracker.util :as u]
@@ -47,12 +47,20 @@
       (t/is (= (map receive-action-time @actions)
                `(~plus-21 ~plus-11 ~start-time))))))
 
-(defn generate-positions [time speed]
-  (lazy-seq (cons {:time time :latitude 1.2 :longitude 2.4 :speed speed}
-                  (generate-positions (add-time time u/sec) (+ speed 2)))))
+(defn generate-positions [initial]
+  (lazy-seq (cons initial
+                  (generate-positions
+                   (-> initial
+                       (update :time #(add-time % u/sec))
+                       (update :latitude #(+ % 0.01))
+                       (update :longitude #(+ % 0.01))
+                       (update :speed #(+ % 1)))))))
 
 (def actions
-  (let [positions (generate-positions (js/Date. "1/2/16 8:00:01 PM") 1)]
+  (let [positions (generate-positions {:time (js/Date. "1/2/16 8:00:01 PM")
+                                       :latitude 43.37
+                                       :longitude -82.81
+                                       :speed 1})]
     [`(:tracking :start)
      `(:tracking :receive-position ~(first positions))
      `(:tracking :tick)
@@ -65,23 +73,27 @@
      `(:remote :success)
      `(:remote :cleanup)]))
 
-(defn mock-now [start]
-  (let [time (atom start)]
-    (fn []
-      (swap! time #(add-time % u/sec))
-      @time)))
+(def now (atom nil))
+
+(defn set-now! [date]
+  (reset! now date))
+
+(defn get-now! []
+  (let [n @now]
+    (swap! now #(add-time % u/sec))
+    n))
 
 (defn handle-with-redefs [action state]
-  (let [time (js/Date. "1/2/16 8:00 PM")]
-    (with-redefs [tr/watch-position (constantly 1)
-                  tr/clear-watch (constantly nil)
-                  u/now (mock-now time)
-                  js/setInterval (constantly 1)
-                  js/clearInterval (constantly nil)
-                  r/post (constantly nil)]
-      (c/handle action state))))
+  (with-redefs [tr/watch-position (constantly 1)
+                tr/clear-watch (constantly nil)
+                u/now get-now!
+                js/setInterval (constantly 1)
+                js/clearInterval (constantly nil)
+                r/post (constantly nil)]
+    (c/handle action state)))
 
 (defn run [actions]
+  (set-now! (js/Date. "1/2/16 8:00 PM"))
   (reduce #(handle-with-redefs %2 %1) (c/init) actions))
 
 (t/deftest handle
@@ -96,13 +108,37 @@
       (c/render next-state)
       (js/setTimeout #(render-loop next-state (rest actions) delay) delay))))
 
-(defn run-with-render [actions delay]
+(defn run-with-render! [actions delay]
+  (set-now! (js/Date. "1/2/16 8:00 PM"))
   (let [state (c/init)]
     (c/render state)
     (js/setTimeout #(render-loop state actions delay) delay)))
 
+(def manual (atom nil))
+
+(defn render-manual-reset! [actions]
+  (set-now! (js/Date. "1/2/16 8:00 PM"))
+  (let [state (c/init)]
+    (c/render state)
+    (reset! manual {:state state :actions actions})))
+
+(defn render-manual-next! []
+  (let [{:keys [actions state]} @manual]
+    (when (seq actions)
+      (let [next-state (handle-with-redefs (first actions) state)]
+        (swap! manual assoc :state next-state :actions (rest actions))
+        (c/render next-state)
+        (first actions)))))
+
+(defn render-manual-refresh! []
+  (c/render (@manual :state)))
+
 (t/use-fixtures :once st/validate-schemas)
 
-;;(t/run-tests)
+(t/run-tests)
 
-;;(run-with-render actions 1000)
+;(run-with-render! actions 1000)
+
+;(render-manual-reset! actions)
+;(render-manual-refresh!)
+;(render-manual-next!)

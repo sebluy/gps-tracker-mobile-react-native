@@ -1,5 +1,6 @@
 (ns gps-tracker.remote
   (:require [cljs.reader :as reader]
+            [gps-tracker.styles :as st]
             [gps-tracker.react :as r]
             [gps-tracker.util :as u]
             [gps-tracker-common.schema-helpers :as sh]
@@ -13,9 +14,9 @@
                           :body (str [action])}))
       (.then #(.text %))
       (.then (fn [body]
-               (on-success (first (reader/read-string body)))
-               (.catch (fn [reason]
-                         (on-failure)))))))
+               (on-success (first (reader/read-string body)))))
+      (.catch (fn [reason]
+                (on-failure)))))
 
 (s/defschema State {:page (s/eq :remote)
                     :path cs/TrackingPath
@@ -58,25 +59,28 @@
     state))
 
 (defn upload-message [status]
-  (if (= status :failed)
-    "Upload failed. Try Again?"
+  (if (= status :failure)
+    "Upload failed. Retry?"
     "Upload?"))
 
 (defn upload-view [address state]
   (r/view
    nil
-   (r/text nil (upload-message (state :status)))
+   (r/text {:style st/title} (upload-message (state :status)))
    (u/button "Yes" #(address '(:send)))
    (u/button "No" #(address '(:cleanup)))))
 
 (defn done-view [address]
   (r/view
    nil
-   (r/text nil "Success")
+   (r/text {:style st/title} "Success")
    (u/button "Back" #(address '(:cleanup)))))
 
 (defn pending-upload-view []
-  (r/progress-bar nil))
+  (r/view
+   nil
+   (r/text {:style st/title} "Please wait...")
+   (r/progress-bar nil)))
 
 (defn view [address state]
   (case (state :status)

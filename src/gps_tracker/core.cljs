@@ -15,10 +15,10 @@
 (defonce state (atom nil))
 (defonce debug (atom {:state '() :actions '()}))
 
-;(->> @debug :actions (take 2))
-;(swap! debug assoc :actions '())
-;(-> @debug)
-;(-> @state keys)
+                                        ;(->> @debug :actions (take 2))
+                                        ;(swap! debug assoc :actions '())
+                                        ;(-> @debug)
+                                        ;(-> @state keys)
 
 (sc/defschema Home {:page (sc/eq :home)})
 (sc/defschema State (u/either t/State rem/State Home))
@@ -70,18 +70,15 @@
 
 (defn view [address state]
   (r/view
-   {:style [st/styles.purple
-            st/styles.fullPage]}
-   (r/view
-    {:style [st/styles.page]}
-    (case (state :page)
-      :tracking
-      (t/view (a/forward address (a/tag :tracking)) state)
+   {:style st/main}
+   (case (state :page)
+     :tracking
+     (t/view (a/forward address (a/tag :tracking)) state)
 
-      :remote
-      (rem/view (a/forward address (a/tag :remote)) state)
+     :remote
+     (rem/view (a/forward address (a/tag :remote)) state)
 
-      (home address)))))
+     (home address))))
 
 (defn address [action]
   (swap! debug update :actions conj action)
@@ -95,8 +92,8 @@
 (defn ^:export init! []
   (reset! state (init))
   #_(js.React.BackAndroid.addEventListener
-   "hardwareBackPress"
-   (fn []
-     (address '(:back))
-     true))
+     "hardwareBackPress"
+     (fn []
+       (address '(:back))
+       true))
   (.registerRunnable r/app-registry "GPSTracker" #(render @state)))

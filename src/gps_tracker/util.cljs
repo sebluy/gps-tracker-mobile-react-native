@@ -58,9 +58,19 @@
 (defn button [text on-press]
   (r/touchable-highlight
    {:onPress on-press
-    :style [sty/styles.button
-            sty/styles.goldBorder]}
+    :style sty/button}
    (r/text
-    {:style [sty/styles.text
-             sty/styles.bigText]}
+    {:style sty/button-text}
     text)))
+
+(def mile 1609.34)
+
+(defn miles
+  "Converts meters to miles"
+  [meters]
+  (/ meters mile))
+
+(defn mph
+  "Converts meters/second to miles/hour"
+  [mps]
+  (/ (* mps (/ hour sec)) mile))
