@@ -30,7 +30,7 @@
 
 (s/defschema Start (s/eq '(:start)))
 
-(s/defschema Stop (s/eq '(:stop)))
+(s/defschema Cleanup (s/eq '(:cleanup)))
 
 (s/defschema ReceivePosition
   (sh/list (s/eq :receive-position) (sh/singleton cs/TrackingPoint)))
@@ -39,7 +39,7 @@
 
 (s/defschema Action
   (u/either Start
-            Stop
+            Cleanup
             ReceivePosition
             Tick))
 
@@ -124,7 +124,7 @@
       (add-position (last action) state)
       (start-tracking address (last action) state))
 
-    :stop
+    :cleanup
     (stop-tracking state)
 
     state))
@@ -151,9 +151,6 @@
    (r/progress-bar nil)))
 
 (defn view [address state]
-  (r/view
-   nil
-   (u/button "Stop Tracking" #(address '(:stop)))
-   (if (state :fix?)
-     (path-stats-view state)
-     (pending-fix-view))))
+  (if (state :fix?)
+    (path-stats-view state)
+    (pending-fix-view)))

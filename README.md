@@ -16,15 +16,15 @@ react-native run-android
 Todo
 --------------------
 
-Units (distance miles, speed mph)
-Get back button working
 Only ask to upload valid path
-Save tracking paths
+Save tracking paths for later
+Add enable location if no location.
 
 Add tests (mock side effects for now) start testing side effects
 Have handlers return a list of effects instead of performing them
 Use waypoint path with tracking
 Add bluetooth
+Find a way to test views without having to restart on figwheel load
 "Polish" figwheel-bridge
 Upload old version (sigsub) of gps-tracker to heroku
 Find better way to filter gps position updates (core.async?, rx?)

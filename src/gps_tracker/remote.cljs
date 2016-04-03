@@ -71,10 +71,7 @@
    (u/button "No" #(address '(:cleanup)))))
 
 (defn done-view [address]
-  (r/view
-   nil
-   (r/text {:style st/title} "Success")
-   (u/button "Back" #(address '(:cleanup)))))
+  (r/text {:style st/title} "Success"))
 
 (defn pending-upload-view []
   (r/view

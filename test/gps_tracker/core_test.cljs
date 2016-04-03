@@ -61,17 +61,17 @@
                                        :latitude 43.37
                                        :longitude -82.81
                                        :speed 1})]
-    [`(:tracking :start)
-     `(:tracking :receive-position ~(first positions))
-     `(:tracking :tick)
-     `(:tracking :receive-position ~(fnext positions))
-     `(:tracking :tick)
-     `(:tracking :stop)
-     `(:remote :send)
-     `(:remote :failure)
-     `(:remote :send)
-     `(:remote :success)
-     `(:remote :cleanup)]))
+    [`(:page :tracking :start)
+     `(:page :tracking :receive-position ~(first positions))
+     `(:page :tracking :tick)
+     `(:page :tracking :receive-position ~(fnext positions))
+     `(:page :tracking :tick)
+     `(:page :back)
+     `(:page :remote :send)
+     `(:page :remote :failure)
+     `(:page :remote :send)
+     `(:page :remote :success)
+     `(:page :back)]))
 
 (def now (atom nil))
 
@@ -135,7 +135,7 @@
 
 (t/use-fixtures :once st/validate-schemas)
 
-(t/run-tests)
+;(t/run-tests)
 
 ;(run-with-render! actions 1000)
 
