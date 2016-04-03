@@ -1,6 +1,7 @@
 (ns gps-tracker.page
   (:require [gps-tracker.react :as r]
             [gps-tracker.remote :as rem]
+            [gps-tracker.path :as p]
             [gps-tracker.tracking :as t]
             [gps-tracker.address :as a]
             [gps-tracker.util :as u]
@@ -33,10 +34,14 @@
     :else
     state))
 
+
 (sc/defn after :- State [address action :- Action state :- State]
   (cond
     (= action '(:tracking :cleanup))
-    (rem/init (state :path))
+    (let [path (state :path)]
+      (if (p/valid? path)
+        (rem/init path)
+        (init)))
 
     (= action '(:remote :cleanup))
     (init)

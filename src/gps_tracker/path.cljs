@@ -47,3 +47,7 @@
 (defn waypoint-attributes [path]
   {:distance (gstring/format "%.2fm" (total-distance path))
    :count (count (path :points))})
+
+(defn valid? [path]
+  (and (map? path)
+       (> (count (path :points)) 0)))
