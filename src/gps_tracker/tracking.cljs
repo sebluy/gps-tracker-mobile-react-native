@@ -21,10 +21,15 @@
                          :fix? (s/eq false)
                          :watch-id s/Int})
 
+;; idle state is after tracking has stopped, but keep path so
+;; something else can use it
 (s/defschema Idle {:page (s/eq :tracking)
                    (s/optional-key :path) cs/TrackingPath})
 
-(s/defschema State (u/either Tracking PendingFix Idle))
+(s/defschema BadPositionState {:page (s/eq :tracking)
+                          :bad-position? true})
+
+(s/defschema State (u/either Tracking PendingFix Idle BadPositionState))
 
 ;; ACTIONS
 
@@ -35,12 +40,16 @@
 (s/defschema ReceivePosition
   (sh/list (s/eq :receive-position) (sh/singleton cs/TrackingPoint)))
 
+(s/defschema BadPositionAction
+  (s/eq '(:bad-position)))
+
 (s/defschema Tick (s/eq '(:tick)))
 
 (s/defschema Action
   (u/either Start
             Cleanup
             ReceivePosition
+            BadPositionAction
             Tick))
 
 ;; HANDLERS
@@ -79,7 +88,7 @@
 
 (defn watch-position [address]
   (let [on-success (on-new-position address)
-        on-error r/toast
+        on-error #(address `(:bad-position))
         options #js {:enableHighAccuracy true}]
     (js.React.Geolocation.watchPosition on-success on-error options)))
 
@@ -101,6 +110,7 @@
            :interval interval
            :now time
            :started time)))
+
 
 (defn stop-tracking [{:keys [interval watch-id] :as state}]
   (clear-watch watch-id)
@@ -124,12 +134,22 @@
       (add-position (last action) state)
       (start-tracking address (last action) state))
 
+    :bad-position
+    (if (state :fix)
+      state
+      (do
+        (stop-tracking state)
+        {:page :tracking :bad-position? true}))
+
     :cleanup
     (stop-tracking state)
 
     state))
 
 ;; VIEW
+
+(defn bad-position-view []
+  (r/text {:style st/title} "Please enable location updates and try again."))
 
 (defn stat-view [stat]
   (r/text {:style st/stat} stat))
@@ -151,6 +171,12 @@
    (r/progress-bar nil)))
 
 (defn view [address state]
-  (if (state :fix?)
+  (cond
+    (state :fix?)
     (path-stats-view state)
+
+    (state :bad-position?)
+    (bad-position-view)
+
+    :else
     (pending-fix-view)))

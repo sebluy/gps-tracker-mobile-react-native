@@ -16,9 +16,8 @@ react-native run-android
 Todo
 --------------------
 
-Only ask to upload valid path
+Change page to {:id ... :state ...}
 Save tracking paths for later
-Add enable location if no location.
 
 Add tests (mock side effects for now) start testing side effects
 Have handlers return a list of effects instead of performing them
