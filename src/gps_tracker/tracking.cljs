@@ -9,25 +9,21 @@
 
 ;; STATE
 
-(s/defschema Tracking {:page (s/eq :tracking)
-                       :fix? (s/eq true)
+(s/defschema Tracking {:fix? (s/eq true)
                        :path cs/TrackingPath
                        :watch-id s/Int
                        :interval s/Int
                        :now cs/Date
                        :started cs/Date})
 
-(s/defschema PendingFix {:page (s/eq :tracking)
-                         :fix? (s/eq false)
+(s/defschema PendingFix {:fix? (s/eq false)
                          :watch-id s/Int})
 
 ;; idle state is after tracking has stopped, but keep path so
 ;; something else can use it
-(s/defschema Idle {:page (s/eq :tracking)
-                   (s/optional-key :path) cs/TrackingPath})
+(s/defschema Idle {(s/optional-key :path) cs/TrackingPath})
 
-(s/defschema BadPositionState {:page (s/eq :tracking)
-                          :bad-position? true})
+(s/defschema BadPositionState {:bad-position? (s/eq true)})
 
 (s/defschema State (u/either Tracking PendingFix Idle BadPositionState))
 
@@ -97,8 +93,7 @@
 
 (defn request-fix [address]
   (let [watch-id (watch-position address)]
-    {:page :tracking
-     :fix? false
+    {:fix? false
      :watch-id watch-id}))
 
 (defn start-tracking [address position state]
@@ -110,7 +105,6 @@
            :interval interval
            :now time
            :started time)))
-
 
 (defn stop-tracking [{:keys [interval watch-id] :as state}]
   (clear-watch watch-id)
@@ -139,7 +133,7 @@
       state
       (do
         (stop-tracking state)
-        {:page :tracking :bad-position? true}))
+        {:bad-position? true}))
 
     :cleanup
     (stop-tracking state)

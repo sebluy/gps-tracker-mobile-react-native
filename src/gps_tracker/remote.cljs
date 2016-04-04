@@ -18,13 +18,11 @@
       (.catch (fn [reason]
                 (on-failure)))))
 
-(s/defschema State {:page (s/eq :remote)
-                    :path cs/TrackingPath
+(s/defschema State {:path cs/TrackingPath
                     :status (s/enum :fresh :pending :success :failure)})
 
 (defn init [path]
-  {:page :remote
-   :path path
+  {:path path
    :status :fresh})
 
 (s/defschema Send (s/eq '(:send)))

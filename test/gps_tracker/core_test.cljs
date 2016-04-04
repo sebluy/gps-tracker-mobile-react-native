@@ -62,6 +62,9 @@
                                        :longitude -82.81
                                        :speed 1})]
     [`(:page :tracking :start)
+     `(:page :tracking :bad-position)
+     `(:page :back)
+     `(:page :tracking :start)
      `(:page :tracking :receive-position ~(first positions))
      `(:page :tracking :tick)
      `(:page :tracking :receive-position ~(fnext positions))
@@ -135,7 +138,7 @@
 
 (t/use-fixtures :once st/validate-schemas)
 
-;(t/run-tests)
+(t/run-tests)
 
 ;(run-with-render! actions 1000)
 

@@ -11,8 +11,15 @@
 
 ;; SCHEMAS
 
-(sc/defschema Home {:page (sc/eq :home)})
-(sc/defschema State (u/either t/State rem/State Home))
+(sc/defschema Home {:id (sc/eq :home)})
+(sc/defschema Tracking {:id (sc/eq :tracking)
+                        :state t/State})
+(sc/defschema Remote {:id (sc/eq :remote)
+                      :state rem/State})
+(sc/defschema State (u/either Tracking
+                              Remote
+                              Home))
+
 
 (sc/defschema Action
   (u/either (sh/list (sc/eq :remote) rem/Action)
@@ -20,7 +27,7 @@
             (sc/eq '(:back))))
 
 (sc/defn init :- State []
-  {:page :home})
+  {:id :home})
 
 ;; HANDLERS
 
@@ -29,27 +36,28 @@
 (sc/defn before :- State [action :- Action state :- State]
   (cond
     (= action '(:tracking :start))
-    (assoc state :page :tracking)
+    {:id :tracking
+     :state {}}
 
     :else
     state))
 
-
 (sc/defn after :- State [address action :- Action state :- State]
   (cond
     (= action '(:tracking :cleanup))
-    (let [path (state :path)]
+    (let [path (get-in state [:state :path])]
       (if (p/valid? path)
-        (rem/init path)
+        {:id :remote
+         :state (rem/init path)}
         (init)))
 
     (= action '(:remote :cleanup))
     (init)
 
     (= action '(:back))
-    (if (= (state :page) :home)
+    (if (= (state :id) :home)
       (js.React.BackAndroid.exitApp)
-      (handle address `(~(state :page) :cleanup) state))
+      (handle address `(~(state :id) :cleanup) state))
 
     :else
     state))
@@ -57,12 +65,18 @@
 (sc/defn delegate :- State [address action :- Action state :- State]
   (case (first action)
     :remote
-    (when (= (state :page) :remote)
-      (rem/handle (a/forward address (a/tag :remote)) (rest action) state))
+    (when (= (state :id) :remote)
+      (update state :state
+              (partial rem/handle
+                       (a/forward address (a/tag :remote))
+                       (rest action))))
 
     :tracking
-    (when (= (state :page) :tracking)
-      (t/handle (a/forward address (a/tag :tracking)) (rest action) state))
+    (when (= (state :id) :tracking)
+      (update state :state
+              (partial t/handle
+                       (a/forward address (a/tag :tracking))
+                       (rest action))))
 
     state))
 
@@ -80,11 +94,11 @@
 (defn view [address state]
   (r/view
    {:style st/main}
-   (case (state :page)
+   (case (state :id)
      :tracking
-     (t/view (a/forward address (a/tag :tracking)) state)
+     (t/view (a/forward address (a/tag :tracking)) (state :state))
 
      :remote
-     (rem/view (a/forward address (a/tag :remote)) state)
+     (rem/view (a/forward address (a/tag :remote)) (state :state))
 
      (home address))))
