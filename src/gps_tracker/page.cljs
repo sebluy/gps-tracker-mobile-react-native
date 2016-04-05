@@ -3,6 +3,7 @@
             [gps-tracker.remote :as rem]
             [gps-tracker.path :as p]
             [gps-tracker.tracking :as t]
+            [gps-tracker.tracking-paths-index :as tp]
             [gps-tracker.address :as a]
             [gps-tracker.util :as u]
             [gps-tracker-common.schema-helpers :as sh]
@@ -11,7 +12,10 @@
 
 ;; SCHEMAS
 
+(sc/defschema PageID (u/either (sc/eq :tracking-paths-index)))
+
 (sc/defschema Home {:id (sc/eq :home)})
+(sc/defschema TrackingPathsIndex {:id (sc/eq :tracking-paths-index)})
 (sc/defschema Tracking {:id (sc/eq :tracking)
                         :state t/State})
 (sc/defschema Remote {:id (sc/eq :remote)
@@ -23,6 +27,7 @@
 
 (sc/defschema Action
   (u/either (sh/list (sc/eq :remote) rem/Action)
+            (sh/list (sc/eq :navigate) (sh/singleton PageID))
             (sh/list (sc/eq :tracking) t/Action)
             (sc/eq '(:back))))
 
@@ -39,6 +44,10 @@
     {:id :tracking
      :state {}}
 
+    (= (first action) :navigate)
+    (let [page-id (last action)]
+      page-id)
+
     :else
     state))
 
@@ -51,7 +60,7 @@
          :state (rem/init path)}
         (init)))
 
-    (= action '(:remote :cleanup))
+    (= (second action) :cleanup)
     (init)
 
     (= action '(:back))
@@ -89,7 +98,11 @@
 ;; VIEW
 
 (defn home [address]
-  (u/button "Start Tracking" #(address `(:tracking :start))))
+  (r/view
+   nil
+   (u/button "Start Tracking" #(address `(:tracking :start)))
+   (u/button "Tracking Paths"
+             #(address `(:navigate {:id :tracking-paths-index})))))
 
 (defn view [address state]
   (r/view
@@ -100,5 +113,8 @@
 
      :remote
      (rem/view (a/forward address (a/tag :remote)) (state :state))
+
+     :tracking-paths-index
+     (tp/view nil)
 
      (home address))))

@@ -15,14 +15,17 @@ react-native run-android
 
 Todo
 --------------------
+Save tracking paths for later (use local storage)
+- Tracking paths option in main menu
+- Ask to save if not upload
+- Delete saved tracking path on upload
 
-Change page to {:id ... :state ...}
-Save tracking paths for later
+Fetch waypoint paths
+Use waypoint paths with tracking
+Add bluetooth
 
 Add tests (mock side effects for now) start testing side effects
 Have handlers return a list of effects instead of performing them
-Use waypoint path with tracking
-Add bluetooth
 Find a way to test views without having to restart on figwheel load
 "Polish" figwheel-bridge
 Upload old version (sigsub) of gps-tracker to heroku

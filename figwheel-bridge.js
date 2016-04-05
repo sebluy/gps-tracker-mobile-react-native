@@ -8,14 +8,15 @@ var CLOSURE_UNCOMPILED_DEFINES = null;
 
 var React = require('react-native');
 
+var style = {flex: 1, alignItems: 'center', justifyContent: 'center'};
+
 var config = {
     basePath: "target/",
     googBasePath: 'goog/',
     splash: React.createClass({
         render: function () {
-            var plainStyle = {flex: 1, alignItems: 'center', justifyContent: 'center'};
             return (
-                    <React.View style={plainStyle}>
+                    <React.View style={style}>
                     <React.Text>Waiting for Figwheel to load files.</React.Text>
                     </React.View>
             );
@@ -29,7 +30,7 @@ var fileBasePath = null; // will be set dynamically
 var evaluate = eval; // This is needed, direct calls to eval does not work (RN packager???)
 
 renderMessage = function (msg) {
-    elem = React.createElement(React.View, {}, React.createElement(React.Text, {}, msg));
+    elem = React.createElement(React.View, {style: style}, React.createElement(React.Text, {}, msg));
     React.render(elem, 1);
 };
 
@@ -42,7 +43,9 @@ onError = function (error) {
 function customEval(url, javascript, success, error) {
     if (scriptQueue.length > 0) {
         if (scriptQueue[0] === url) {
-            renderMessage("Script queue length: " + scriptQueue.length);
+            if (scriptQueue.length % 10 == 0) {
+                renderMessage("Script queue length: " + scriptQueue.length);
+            }
             try {
                 evaluate(javascript);
                 console.info('Evaluated: ' + url);
